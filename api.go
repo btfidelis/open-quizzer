@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"log"
 	"github.com/btfidelis/quizzer/models"
+	//"github.com/btfidelis/quizzer/validation"
+	"github.com/btfidelis/quizzer/validation"
 )
 
 type Api struct {
@@ -36,4 +38,27 @@ func (a Api) Response(rw web.ResponseWriter, req *web.Request, ret interface{}, 
 func (a Api) GetQuizList(rw web.ResponseWriter, req *web.Request) {
 	quiz := models.Quiz{}
 	a.Response(rw, req, quiz.ListAll(), 200)
+}
+
+func (a Api) CreateQuiz(rw web.ResponseWriter, req *web.Request) {
+	req.ParseForm()
+	quiz := models.Quiz{
+		Type: req.Form["type"][0],
+		Question: req.Form["question"][0],
+		Answers:  req.Form["answers"],
+		CorrectAnswers: req.Form["correct_answers"],
+	}
+
+	v := validation.ValidateQuiz(quiz)
+
+	if !v.Passed {
+		a.Response(rw, req, v.Errors, http.StatusBadRequest)
+	}
+
+	err := quiz.Save()
+	if err != nil {
+		a.Response(rw, req, "", http.StatusInternalServerError)
+	}
+
+	a.Response(rw, req, map[string]string { "status": "ok", "message": string(quiz.Id) }, http.StatusOK)
 }

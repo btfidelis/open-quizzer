@@ -5,6 +5,7 @@ import (
 )
 
 func SetRoutes(r *web.Router) {
-	r.Get("/quiz", (*Api).GetQuizList)
+	r.Get("/quiz", (*Api).GetQuizList).
+ 	  Post("/quiz", (*Api).CreateQuiz)
 
 }
