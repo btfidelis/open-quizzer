@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"log"
 	"github.com/btfidelis/quizzer/models"
-	//"github.com/btfidelis/quizzer/validation"
 	"github.com/btfidelis/quizzer/validation"
 )
 
@@ -61,4 +60,30 @@ func (a Api) CreateQuiz(rw web.ResponseWriter, req *web.Request) {
 	}
 
 	a.Response(rw, req, map[string]string { "status": "ok", "message": string(quiz.Id) }, http.StatusOK)
+}
+
+func (a Api) UpdateQuiz(rw web.ResponseWriter, req *web.Request) {
+	req.ParseForm()
+	quizId := req.PathParams["id"]
+	quiz := new(models.Quiz)
+	err := quiz.Load(quizId)
+
+	if err != nil {
+		a.Response(rw, req, "", http.StatusNotFound)
+	}
+
+	quiz.Patch(req.Form)
+
+	v := validation.ValidateQuiz(quiz)
+
+	if !v.Passed {
+		a.Response(rw, req, v.Errors, http.StatusBadRequest)
+	}
+
+	err = quiz.Save()
+	if err != nil {
+		a.Response(rw, req, "", http.StatusInternalServerError)
+	}
+
+	a.Response(rw, req, map[string]string {"status": "ok", "message": quiz.Id.String()} , http.StatusOK)
 }
