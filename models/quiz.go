@@ -3,7 +3,6 @@ package models
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/gocraft/web"
 )
 
 const (
@@ -23,12 +22,12 @@ func (q Quiz) getCollection() string {
 	return "quizzes"
 }
 
-func (q *Quiz) Patch(req *web.Request) {
+func (q *Quiz) Patch(req map[string][]string) {
 	quiz := Quiz{
-		Type: req.Form["type"][0],
-		Question: req.Form["question"][0],
-		Answers:  req.Form["answers"],
-		CorrectAnswers: req.Form["correct_answers"],
+		Type: req["type"][0],
+		Question: req["question"][0],
+		Answers:  req["answers"],
+		CorrectAnswers: req["correct_answers"],
 	}
 
 	if q.Type != quiz.Type {
@@ -36,16 +35,27 @@ func (q *Quiz) Patch(req *web.Request) {
 	}
 
 	if q.Question != quiz.Question {
-		q.Type = quiz.Type
+		q.Question = quiz.Question
 	}
 
-	if q.Answers != quiz.Answers {
-		q.Type = quiz.Type
+	if !StringSliceEquals(q.Answers, quiz.Answers) {
+		q.Answers = quiz.Answers
 	}
 
-	if q.CorrectAnswers != quiz.CorrectAnswers {
-		q.Type = quiz.Type
+	if !StringSliceEquals(q.CorrectAnswers, quiz.CorrectAnswers) {
+		q.CorrectAnswers = quiz.CorrectAnswers
 	}
+
+
+}
+
+func (q *Quiz) Update() error {
+	var err error
+	getCollectionFromModel(q, func(c *mgo.Collection) {
+		err = c.UpdateId(q.Id, q)
+	})
+
+	return err
 }
 
 func (q *Quiz) ListAll() []Quiz {

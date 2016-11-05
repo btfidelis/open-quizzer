@@ -65,7 +65,7 @@ func (a Api) CreateQuiz(rw web.ResponseWriter, req *web.Request) {
 func (a Api) UpdateQuiz(rw web.ResponseWriter, req *web.Request) {
 	req.ParseForm()
 	quizId := req.PathParams["id"]
-	quiz := new(models.Quiz)
+	quiz := models.Quiz{}
 	err := quiz.Load(quizId)
 
 	if err != nil {
@@ -80,10 +80,22 @@ func (a Api) UpdateQuiz(rw web.ResponseWriter, req *web.Request) {
 		a.Response(rw, req, v.Errors, http.StatusBadRequest)
 	}
 
-	err = quiz.Save()
+	err = quiz.Update()
 	if err != nil {
 		a.Response(rw, req, "", http.StatusInternalServerError)
 	}
 
 	a.Response(rw, req, map[string]string {"status": "ok", "message": quiz.Id.String()} , http.StatusOK)
+}
+
+func (a Api) GetQuiz(rw web.ResponseWriter, req *web.Request) {
+	quizId := req.PathParams["id"]
+	quiz := models.Quiz{}
+	err := quiz.Load(quizId)
+
+	if err != nil {
+		a.Response(rw, req, "", http.StatusNotFound)
+	}
+
+	a.Response(rw, req, quiz, http.StatusOK)
 }
