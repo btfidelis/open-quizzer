@@ -42,3 +42,7 @@ func getCollectionFromModel(collection CollectionMappable, callback func(*mgo.Co
 	defer sessionCopy.Close()
 	callback(sessionCopy.DB(os.Getenv("MONGODB_DATABASE")).C(collection.getCollection()))
 }
+
+func (c CollectionMappable) Load(id string) error {
+
+}

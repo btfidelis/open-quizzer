@@ -1,19 +1,19 @@
 package main
 
 import (
-	"github.com/gocraft/web"
-	"net/http"
-	"io"
 	"encoding/json"
-	"log"
 	"github.com/btfidelis/quizzer/models"
 	"github.com/btfidelis/quizzer/validation"
+	"github.com/gocraft/web"
+	"gopkg.in/mgo.v2/bson"
+	"io"
+	"log"
+	"net/http"
 )
 
 type Api struct {
 	ResponseDefaultEncoding string
 }
-
 
 func (a Api) Response(rw web.ResponseWriter, req *web.Request, ret interface{}, httpCode int) {
 	rw.Header().Set("Content-Type", a.ResponseDefaultEncoding)
@@ -25,26 +25,26 @@ func (a Api) Response(rw web.ResponseWriter, req *web.Request, ret interface{}, 
 		rw.WriteHeader(httpCode)
 	}
 
-	encodedRet, err :=  json.Marshal(ret)
+	encodedRet, err := json.Marshal(ret)
 
-	if (err != nil) {
+	if err != nil {
 		log.Fatal("Unable to parse to Json ", err)
 	}
 
 	io.WriteString(rw, string(encodedRet))
 }
 
-func (a Api) GetQuizList(rw web.ResponseWriter, req *web.Request) {
-	quiz := models.Quiz{}
+func (a Api) GetQuestionList(rw web.ResponseWriter, req *web.Request) {
+	quiz := models.Question{}
 	a.Response(rw, req, quiz.ListAll(), 200)
 }
 
-func (a Api) CreateQuiz(rw web.ResponseWriter, req *web.Request) {
+func (a Api) CreateQuestion(rw web.ResponseWriter, req *web.Request) {
 	req.ParseForm()
-	quiz := models.Quiz{
-		Type: req.Form["type"][0],
-		Question: req.Form["question"][0],
-		Answers:  req.Form["answers"],
+	quiz := models.Question{
+		Type:           req.Form["type"][0],
+		Question:       req.Form["question"][0],
+		Answers:        req.Form["answers"],
 		CorrectAnswers: req.Form["correct_answers"],
 	}
 
@@ -59,13 +59,13 @@ func (a Api) CreateQuiz(rw web.ResponseWriter, req *web.Request) {
 		a.Response(rw, req, "", http.StatusInternalServerError)
 	}
 
-	a.Response(rw, req, map[string]string { "status": "ok", "message": string(quiz.Id) }, http.StatusOK)
+	a.Response(rw, req, map[string]string{"status": "ok", "message": string(quiz.Id)}, http.StatusOK)
 }
 
-func (a Api) UpdateQuiz(rw web.ResponseWriter, req *web.Request) {
+func (a Api) UpdateQuestion(rw web.ResponseWriter, req *web.Request) {
 	req.ParseForm()
 	quizId := req.PathParams["id"]
-	quiz := models.Quiz{}
+	quiz := models.Question{}
 	err := quiz.Load(quizId)
 
 	if err != nil {
@@ -85,17 +85,38 @@ func (a Api) UpdateQuiz(rw web.ResponseWriter, req *web.Request) {
 		a.Response(rw, req, "", http.StatusInternalServerError)
 	}
 
-	a.Response(rw, req, map[string]string {"status": "ok", "message": quiz.Id.String()} , http.StatusOK)
+	a.Response(rw, req, map[string]string{"status": "ok", "message": quiz.Id.String()}, http.StatusOK)
+}
+
+func (a Api) GetQuestion(rw web.ResponseWriter, req *web.Request) {
+	quizId := req.PathParams["id"]
+	quiz := models.Question{}
+	err := quiz.Load(quizId)
+
+	if err != nil {
+		a.Response(rw, req, "", http.StatusInternalServerError)
+	}
+
+	a.Response(rw, req, quiz, http.StatusOK)
+}
+
+func (a Api) DeleteQuestion(rw web.ResponseWriter, req *web.Request) {
+	quizId := req.PathParams["id"]
+	quiz := models.Question{Id: bson.ObjectIdHex(quizId)}
+	err := quiz.Delete()
+
+	if err != nil {
+		a.Response(rw, req, "", http.StatusInternalServerError)
+	}
+
+	a.Response(rw, req, quizId, http.StatusOK)
+}
+
+func (a Api) GetQuizList(rw web.ResponseWriter, req *web.Request) {
+	quiz := models.Quiz{}
+	a.Response(rw, req, quiz.ListAll(), 200)
 }
 
 func (a Api) GetQuiz(rw web.ResponseWriter, req *web.Request) {
 	quizId := req.PathParams["id"]
-	quiz := models.Quiz{}
-	err := quiz.Load(quizId)
-
-	if err != nil {
-		a.Response(rw, req, "", http.StatusNotFound)
-	}
-
-	a.Response(rw, req, quiz, http.StatusOK)
 }

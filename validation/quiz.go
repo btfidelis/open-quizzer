@@ -13,7 +13,7 @@ type ValidationResult struct {
 	Errors  []error
 }
 
-func ValidateQuiz(q models.Quiz) ValidationResult {
+func ValidateQuiz(q models.Question) ValidationResult {
 	validationErrors = make([]error, 0)
 
 	if len(q.Answers) < 4 {

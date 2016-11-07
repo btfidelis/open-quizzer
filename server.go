@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/gocraft/web"
-	"net/http"
-	"github.com/joho/godotenv"
 	"github.com/btfidelis/quizzer/models"
+	"github.com/gocraft/web"
+	"github.com/joho/godotenv"
 	"log"
+	"net/http"
 )
 
 func LoadConfig() {

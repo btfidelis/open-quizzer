@@ -6,5 +6,5 @@ import (
 
 func SetMiddleware(r *web.Router) {
 	r.Middleware(web.LoggerMiddleware).
-	Middleware(web.ShowErrorsMiddleware)
+		Middleware(web.ShowErrorsMiddleware)
 }
